@@ -1,0 +1,107 @@
+﻿@page
+@using Ikazuchi.Data.Models.Users
+@using Microsoft.AspNetCore.Identity
+@model Ikazuchi.Web.Areas.RtcSessions.Pages.Invite.AcceptModel
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Invite to " + Model.Session.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var creatorUser = Model.Session.Creator;
+}
+
+<div class="jumbotron">
+    <h1 class="display-4">@Html.DisplayFor(model => model.Session.Title)</h1>
+
+    <dl class="row">
+        <dt class="col-sm-2">
+            Created at
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Session.CreationTime)
+        </dd>
+
+        <dt class="col-sm-2">
+            Created by
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                var screenName = creatorUser.ScreenName;
+                if (screenName == null || screenName.Trim().Equals(""))
+                {
+                    screenName = creatorUser.UserName;
+                }
+            }
+            @screenName &lt;@creatorUser.Email&gt;
+        </dd>
+
+        <dt class="col-sm-2">
+            Visibility
+        </dt>
+        <dd class="col-sm-10">
+            @if (Model.Session.Public)
+            {
+                <span class="badge badge-primary">Public</span>
+            }
+            else
+            {
+                <span class="badge badge-secondary">Private</span>
+            }
+        </dd>
+
+        <dt class="col-sm-2 text-muted">
+            Unique Id
+        </dt>
+        <dd class="col-sm-10 text-muted">
+            <a asp-page="./Details" asp-route-id="@Model.Session.Id">@Html.DisplayFor(model => model.Session.Id)</a>
+        </dd>
+    </dl>
+
+    <hr class="my-4">
+
+    <p>@Html.DisplayFor(model => model.Session.Description)</p>
+
+    <hr class="my-4"/>
+
+    @if (!Model.Joined)
+    {
+        <p>You're invited to join this session.</p>
+
+        <dl class="row">
+            @{
+                var invitedBy = Model.Invite.Creator.ScreenName.Trim();
+                if (invitedBy.Length < 0)
+                {
+                    invitedBy = Model.Invite.Creator.Email;
+                }
+            }
+
+            <dt class="col-sm-2">Invited by</dt>
+            <dd class="col-sm-10">@invitedBy &lt;@Model.Invite.Creator.Email&gt;</dd>
+        </dl>
+
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <form method="post">
+                <input type="hidden" asp-for="Invite.Id" name="inviteId"/>
+
+                <button class="btn btn-primary">Accept</button>
+            </form>
+        }
+        else
+        {
+            <p>
+                <a asp-area="Identity" asp-page="/Account/Login" asp-route-returnUrl="/RtcSessions/Invite/Accept?token=@Model.Token">Login</a>
+                to accept this invite.
+            </p>
+        }
+    }
+    else
+    {
+        <p>You have already joined the session.</p>
+
+        <a class="btn btn-link btn-primary" asp-page="/Details" asp-route-id="@Model.Session.Id">View</a>
+    }
+</div>

@@ -1,0 +1,13 @@
+﻿@model Ikazuchi.Web.Models.ErrorViewModel
+
+@{
+    ViewData["Title"] = "Unauthorized";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="text-danger">@Model.Message</h1>
+<p class="text-muted">@Model.Description</p>
+
+<hr/>
+
+<partial model="@Model" name="_RequestInfoPartial"/>

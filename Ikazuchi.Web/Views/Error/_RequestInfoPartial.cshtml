@@ -1,0 +1,24 @@
+﻿@using Ikazuchi.Data.Models.Users
+@using Microsoft.AspNetCore.Identity
+
+@model Ikazuchi.Web.Models.ErrorViewModel
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<dl>
+    <dt>Request Id</dt>
+    <dd>@(Model.RequestId)</dd>
+    <dt>User Id</dt>
+    <dd>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            var currentUser = await UserManager.GetUserAsync(User);
+            <span> @currentUser.Id</span>
+        }
+        else
+        {
+            <span class="text-muted">Anonymous</span>
+        }
+    </dd>
+</dl>

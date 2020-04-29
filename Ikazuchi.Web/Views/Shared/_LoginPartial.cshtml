@@ -1,0 +1,40 @@
+﻿@using Ikazuchi.Data.Models.Users
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav">
+    @if (SignInManager.IsSignedIn(User))
+    {
+        var currentUser = await UserManager.GetUserAsync(User);
+        var displayName = currentUser.ScreenName.Trim().Equals("")
+            ? currentUser.UserName
+            : currentUser.ScreenName;
+
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="usernameDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                @displayName
+            </a>
+            <div class="dropdown-menu" aria-labelledby="usernameDropdown">
+                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">Account</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item disabled" href="#">Admin</a>
+            </div>
+        </li>
+
+        <li class="nav-item">
+            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new {area = ""})">
+                <button type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+    }
+</ul>

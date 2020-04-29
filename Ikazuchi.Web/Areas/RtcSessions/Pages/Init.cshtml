@@ -1,0 +1,74 @@
+﻿@page
+@using Ikazuchi.Web.Areas.RtcSessions.Models
+@model Ikazuchi.Web.Areas.RtcSessions.Pages.InitModel
+
+@{
+    ViewData["Title"] = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1 class="h2">Create Session </h1>
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+    <!-- title -->
+    <div class="form-group row">
+        <label asp-for="Form.Title" class="col-sm-2 col-form-label"></label>
+        <div class="col-sm-10">
+            <input asp-for="Form.Title" class="form-control"/>
+            <span asp-validation-for="Form.Title" class="text-danger"></span>
+        </div>
+    </div>
+
+    <!-- visibility -->
+    <div class="form-group row">
+        <label asp-for="Form.Visibility" class="col-sm-2 col-form-label"></label>
+
+        <div class="col-sm-10">
+            <div class="custom-control custom-control-inline custom-radio">
+                @{
+                    var publicButtonId = ViewData.TemplateInfo.GetFullHtmlFieldName("SessionVisibility_Public");
+                }
+                @Html.RadioButtonFor(model => model.Form.Visibility, SessionVisibility.Public, new
+                {
+                    @class = "custom-control-input",
+                    id = publicButtonId
+                })
+                <label class="custom-control-label" for="@publicButtonId">Public</label>
+            </div>
+
+            <div class="custom-control custom-control-inline custom-radio">
+                @{
+                    var privateButtonId = ViewData.TemplateInfo.GetFullHtmlFieldName("SessionVisibility_Private");
+                }
+                @Html.RadioButtonFor(model => model.Form.Visibility, SessionVisibility.Private, new
+                {
+                    @class = "custom-control-input",
+                    id = privateButtonId
+                })
+                <label class="custom-control-label" for="@privateButtonId">Private</label>
+            </div>
+
+            <span asp-validation-for="Form.Visibility" class="text-danger"></span>
+        </div>
+    </div>
+
+    <hr/>
+
+    <!-- description -->
+    <div class="form-group">
+        <label asp-for="Form.Description"></label>
+        <textarea asp-for="Form.Description" class="form-control" type="text" rows="20"></textarea>
+        <span asp-validation-for="Form.Description" class="text-danger"></span>
+    </div>
+
+    <!-- control buttons -->
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary"/>
+    </div>
+</form>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

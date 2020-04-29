@@ -1,0 +1,117 @@
+﻿@page
+@using Ikazuchi.Data.Models.Users
+@using Ikazuchi.Web.Areas.RtcSessions.Pages
+@using Microsoft.AspNetCore.Identity
+@model Ikazuchi.Web.Areas.RtcSessions.Pages.IndexModel
+@inject UserManager<ApplicationUser> UserManager
+
+@{
+    ViewData["Title"] = "Public Sessions";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    const int paginationPeek = 3;
+
+    var loggedIn = await UserManager.GetUserAsync(User) != null;
+}
+
+<h1 class="h3 my-4 text-muted">Public Sessions</h1>
+
+<div class="table-responsive-lg">
+    <table class="table table-hover">
+        @{
+            const string titleCol = "col-6";
+            const string creatorCol = "col-3";
+            const string dateCol = "col-3";
+        }
+
+        <thead>
+        <tr class="d-flex">
+            <td class="@titleCol">Title</td>
+            <td class="@creatorCol">Creator</td>
+            <td class="@dateCol">Created at</td>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var session in Model.Sessions)
+        {
+            <tr class="d-flex">
+                <td class="@titleCol align-middle">
+                    <a class="stretched-link" asp-page="./Details" asp-route-id="@session.Id">
+                        @Html.DisplayFor(modelItem => session.Title)
+                    </a>
+                </td>
+                <td class="@creatorCol align-middle">
+                    @session.Creator.GetDisplayName(loggedIn)
+                </td>
+                <td class="@dateCol align-middle">
+                    <time class="time-ago" datetime="@session.CreationTime.ToString("o")">@Html.DisplayFor(modelItem => session.CreationTime)</time>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+<nav aria-label="Session List Page Navigation">
+    <ul class="pagination justify-content-center">
+        @if (Model.PageIndex != 1)
+        {
+            <!-- to previous page -->
+            <li class="page-item">
+                <a class="page-link" aria-label="Previous Page" asp-route-pageIndex="@(Model.PageIndex - 1)">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        }
+        else
+        {
+            <!-- no more previous page -->
+            <li class="page-item disabled">
+                <a class="page-link" aria-disabled="true" tabindex="-1" href="#">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+        }
+
+        <!-- page numbers -->
+        @for (var i = Math.Max(1, Model.PageIndex - paginationPeek); i <= Math.Min(Model.PageCount, Model.PageIndex + paginationPeek); i++)
+        {
+            @if (i != Model.PageIndex)
+            {
+                <!-- page number -->
+                <li class="page-item">
+                    <a class="page-link" asp-route-pageIndex="@i">
+                        @i
+                    </a>
+                </li>
+            }
+            else
+            {
+                <!-- current page -->
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="#">
+                        @i <span class="sr-only">(current)</span>
+                    </a>
+                </li>
+            }
+        }
+
+        <!-- to next page -->
+        @if (Model.PageIndex != Model.PageCount)
+        {
+            <li class="page-item">
+                <a class="page-link" aria-label="Next Page" asp-route-pageIndex="@(Model.PageIndex + 1)">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        }
+        else
+        {
+            <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        }
+    </ul>
+</nav>
