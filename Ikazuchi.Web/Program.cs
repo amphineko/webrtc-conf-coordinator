@@ -11,8 +11,9 @@ namespace Ikazuchi.Web
             CreateHostBuilder(args).Build().Run();
         }
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host
+        public static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host
                 .CreateDefaultBuilder(args)
                 .ConfigureLogging(logging => { logging.AddConsole(); })
                 .ConfigureWebHostDefaults(webBuilder =>
@@ -20,5 +21,6 @@ namespace Ikazuchi.Web
                     webBuilder.UseUrls("https://0.0.0.0:5001/");
                     webBuilder.UseStartup<Startup>();
                 });
+        }
     }
 }

@@ -1,44 +1,55 @@
 import { faBroadcastTower, faExclamationTriangle, faPlug, faSpinner } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { HubConnectionState } from '@microsoft/signalr'
 import React from 'react'
 import { Badge } from 'react-bootstrap'
 import { GatewayState } from './gateway/client'
 import { RtcPeerState } from './gateway/peer'
 
 export interface MemberDescriptor {
-    id: string
-    screenName: string
-    state: RtcPeerState
+    id: string;
+    screenName: string;
+    state: RtcPeerState;
 }
 
 function MemberEntry(props: {
     screenName: string,
-    state: RtcPeerState
+    state: RtcPeerState;
 }) {
     const { screenName, state } = props
 
     return (
         <li className="member">
             <span className="screen-name mr-1">{screenName}</span>
-            {state === 'connecting' && <Badge pill variant='warning'><FontAwesomeIcon icon={faSpinner} spin /></Badge>}
-            {state === 'disconnected' && <Badge pill variant='danger'><FontAwesomeIcon icon={faExclamationTriangle} /></Badge>}
-            {state === 'new' && <Badge pill variant='info'><FontAwesomeIcon icon={faSpinner} spin /></Badge>}
-            {state === 'ready' && <Badge pill variant='success'><FontAwesomeIcon icon={faBroadcastTower} /></Badge>}
+            {state === 'connecting' &&
+                <Badge pill variant="warning">
+                    <FontAwesomeIcon icon={faSpinner} spin />
+                </Badge>}
+            {state === 'disconnected' &&
+                <Badge pill variant="danger">
+                    <FontAwesomeIcon icon={faExclamationTriangle} />
+                </Badge>}
+            {state === 'new' &&
+                <Badge pill variant="info">
+                    <FontAwesomeIcon icon={faSpinner} spin />
+                </Badge>}
+            {state === 'ready' &&
+                <Badge pill variant="success">
+                    <FontAwesomeIcon icon={faBroadcastTower} />
+                </Badge>}
         </li>
     )
 }
 
 export function MemberList(props: {
     gatewayState: GatewayState,
-    peerStates: MemberDescriptor[]
+    peerStates: MemberDescriptor[];
 }) {
-    var gatewayState
+    let gatewayState: Object
     switch (props.gatewayState) {
         case 'connected':
             gatewayState = (
                 <span>
-                    <Badge pill variant='warning'>
+                    <Badge pill variant="warning">
                         Authenticating
                         <FontAwesomeIcon icon={faSpinner} spin />
                     </Badge>
@@ -48,7 +59,7 @@ export function MemberList(props: {
         case 'connecting':
             gatewayState = (
                 <span>
-                    <Badge pill variant='warning'>
+                    <Badge pill variant="warning">
                         Connecting
                         <FontAwesomeIcon icon={faSpinner} spin />
                     </Badge>
@@ -58,7 +69,7 @@ export function MemberList(props: {
         case 'disconnected':
             gatewayState = (
                 <span>
-                    <Badge variant='danger'>
+                    <Badge variant="danger">
                         Disconnected
                         <FontAwesomeIcon icon={faExclamationTriangle} />
                     </Badge>
@@ -68,7 +79,7 @@ export function MemberList(props: {
         case 'ready':
             gatewayState = (
                 <span>
-                    <Badge variant='success'>
+                    <Badge variant="success">
                         Ready
                         <FontAwesomeIcon icon={faPlug} />
                     </Badge>
@@ -86,9 +97,7 @@ export function MemberList(props: {
             <div className="gateway-state p-3">
                 <span className="title text-muted mr-2">Signaling</span>
                 <span className="state">
-                    {
-                        gatewayState
-                    }
+                    {gatewayState}
                 </span>
             </div>
             <hr className="m-0" />

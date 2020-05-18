@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Ikazuchi.Web.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Ikazuchi.Web.Controllers
 {
@@ -15,13 +15,16 @@ namespace Ikazuchi.Web.Controllers
             _logger = logger;
         }
 
-        private string GetRequestId() => Activity.Current?.Id ?? HttpContext.TraceIdentifier ?? "Unknown";
+        private string GetRequestId()
+        {
+            return Activity.Current?.Id ?? HttpContext.TraceIdentifier ?? "Unknown";
+        }
 
         public new IActionResult Unauthorized()
         {
             HttpContext.Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-            return View("General", new ErrorViewModel()
+            return View("General", new ErrorViewModel
             {
                 Description = "You're not authorized to view the page or to perform such action",
                 Message = "Unauthorized",

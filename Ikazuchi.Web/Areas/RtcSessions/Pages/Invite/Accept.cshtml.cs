@@ -29,7 +29,7 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages.Invite
 
         public RtcSessionInvite Invite { get; set; }
 
-        public bool Joined { get; set; } = false;
+        public bool Joined { get; set; }
 
         public RtcSession Session { get; set; }
 

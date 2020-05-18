@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import { Container, Row } from 'react-bootstrap'
 
 import { MemberList, MemberDescriptor } from './member_list'
@@ -24,12 +24,13 @@ export function AppMain(props: { config: AppConfig, sessionId: string, iceServer
     const [userMediaRequested, setUserMediaRequested] = useState(false)
 
     const [gatewayState, setGatewayState] = useState<GatewayState>('disconnected')
-    const [peerStates, setPeerStates] = useState<MemberDescriptor[]>([])
     const client = useRef<GatewayClient>(null!)
 
-    const [playbackStreams, setRemoteStreams] = useState<StreamDescription[]>([])
+    const [remoteStreams, setRemoteStreams] = useState<{ [id: string]: StreamDescription }>({})
 
-    const userInfoTable = useRef(new Map<string, UserInfo>())
+    const [peerInfos, setPeerInfos] = useState<{ [key: string]: UserInfo }>({})
+
+    console.log(remoteStreams)
 
     async function initializeUserMedia() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
@@ -44,43 +45,65 @@ export function AppMain(props: { config: AppConfig, sessionId: string, iceServer
         videoTracks.forEach((track) => track.stop())
     }
 
+    const peerStates = useMemo(() => {
+        if (client.current === null) return []
+
+        const result: MemberDescriptor[] = []
+        client.current.peers.forEach((peer, id) => {
+            const info = id in peerInfos ? peerInfos[id] : undefined
+            const screenName = info ? info.screenName : 'loading'
+            result.push({ id: id, screenName: screenName, state: peer.state })
+        })
+
+        return result
+    }, [peerInfos])
+
     function updatePlaybackStreams() {
-        const result: StreamDescription[] = localStream ? [{
-            id: 'local',
-            screenName: '',
-            stream: localStream
-        }] : []
+        setRemoteStreams({
+            local: { id: 'local', screenName: '', stream: localStream }
+        })
 
         if (client.current !== null) {
             client.current.peers.forEach((peer, id) => {
-                const stream = new MediaStream()
-                peer.remoteTracks.forEach((track) => stream.addTrack(track))
+                const stream = (remoteStreams[id] && remoteStreams[id].stream) ?? new MediaStream()
+                peer.remoteTracks.forEach((track) => {
+                    if (stream.getTrackById(track.id)) return
 
-                const info = userInfoTable.current.get(id)
+                    stream.addTrack(track)
+                    track.onended = () => stream.removeTrack(track)
+                })
+                stream.onremovetrack = () => {
+                    if (stream.getTracks().length === 0) {
+                        setRemoteStreams({ [id]: { id: id, screenName: 'DISCONNECTED', stream: undefined } })
+                    }
+                }
+
+                const info = id in peerInfos ? peerInfos[id] : undefined
                 const screenName = info ? info.screenName : 'unknown'
 
-                result.push({ id: id, screenName: screenName, stream: stream })
+                setRemoteStreams({ [id]: { id: id, screenName: screenName, stream: stream } })
             })
         }
+    }
 
-        setRemoteStreams(result)
+    function updatePeerInfo() {
+        if (client.current === null) return
+        client.current.peers.forEach((_, id) => {
+            if (id in peerInfos) return
+
+            client.current.getUserInfo(id)
+                .then((user: UserInfo) => setPeerInfos({ [id]: user }))
+                .catch((e) => { logger.error(`Failed to retrieve user info: ${e}`) })
+        })
     }
 
     useEffect(() => {
         // initialize gateway client, if not connected yet
         if (client.current === null) {
-            const c = client.current = new GatewayClient(gatewayUrl, { audio: audioTrack, video: videoTrack }, props.iceServers)
+            const c = client.current =
+                new GatewayClient(gatewayUrl, { audio: audioTrack, video: videoTrack }, props.iceServers)
 
-            c.onpeerchanged = c.onpeerstatechanged = () => {
-                // update peer list
-                const result: MemberDescriptor[] = []
-                c.peers.forEach((peer, id) => {
-                    const info = userInfoTable.current.get(id)
-                    const screenName = info ? info.screenName : 'unknown'
-                    result.push({ id: id, screenName: screenName, state: peer.state })
-                })
-                setPeerStates(result)
-            }
+            c.onpeerchanged = c.onpeerstatechanged = () => updatePeerInfo()
 
             c.onpeertrack = () => updatePlaybackStreams()
 
@@ -88,8 +111,6 @@ export function AppMain(props: { config: AppConfig, sessionId: string, iceServer
                 logger.info(`Gateway connection state → ${state}`)
                 setGatewayState(state)
             }
-
-            c.onpeerinfo = (id, info) => userInfoTable.current.set(id, info)
 
             c.start().then(() => { c.join(sessionId) })
         }
@@ -113,7 +134,7 @@ export function AppMain(props: { config: AppConfig, sessionId: string, iceServer
                     <MemberList gatewayState={gatewayState} peerStates={peerStates} />
                 </div>
                 <div className="col-10">
-                    <PlayerTable peers={playbackStreams} />
+                    <PlayerTable peers={remoteStreams} />
                 </div>
             </Row>
         </Container>

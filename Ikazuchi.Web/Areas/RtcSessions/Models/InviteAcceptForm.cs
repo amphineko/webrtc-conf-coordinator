@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Ikazuchi.Web.Areas.RtcSessions.Models
+﻿namespace Ikazuchi.Web.Areas.RtcSessions.Models
 {
     public class InviteAcceptForm
     {

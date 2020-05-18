@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Threading.Tasks;
 using Ikazuchi.Abstractions;
 using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Users;
 using Ikazuchi.Signaling;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,13 +32,9 @@ namespace Ikazuchi.Web
                 return;
 
             foreach (var ctor in type.GetConstructors())
-            {
-                foreach (var paramInfo in ctor.GetParameters())
-                {
-                    if (!typeCache.Contains(paramInfo.ParameterType))
-                        ConfigureComponent(paramInfo.ParameterType, typeCache, services);
-                }
-            }
+            foreach (var paramInfo in ctor.GetParameters())
+                if (!typeCache.Contains(paramInfo.ParameterType))
+                    ConfigureComponent(paramInfo.ParameterType, typeCache, services);
 
             var descriptor = ServiceDescriptor.Describe(attribute.ServiceType ?? type, type, attribute.Lifetime);
             services.Add(descriptor);
@@ -140,10 +134,7 @@ namespace Ikazuchi.Web
                     {
                         builder.Options.SourcePath = "Client";
 
-                        if (env.IsDevelopment())
-                        {
-                            builder.UseProxyToSpaDevelopmentServer("http://127.0.0.1:13900/");
-                        }
+                        if (env.IsDevelopment()) builder.UseProxyToSpaDevelopmentServer("http://127.0.0.1:13900/");
                     });
             });
         }

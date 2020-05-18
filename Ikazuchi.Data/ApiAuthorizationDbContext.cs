@@ -31,7 +31,10 @@ namespace Ikazuchi.Data
 
         public DbSet<PersistedGrant> PersistedGrants { get; set; }
 
-        Task<int> IPersistedGrantDbContext.SaveChangesAsync() => base.SaveChangesAsync();
+        Task<int> IPersistedGrantDbContext.SaveChangesAsync()
+        {
+            return base.SaveChangesAsync();
+        }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

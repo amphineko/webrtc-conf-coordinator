@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Rtc;
 using Ikazuchi.Data.Models.Users;
 using Ikazuchi.Web.Areas.RtcSessions.Models;
@@ -12,13 +13,13 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class InitModel : PageModel
     {
-        private readonly Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly SessionGrantService _grantService;
 
         private readonly UserManager<ApplicationUser> _userManager;
 
         public InitModel(
-            Data.ApplicationDbContext context,
+            ApplicationDbContext context,
             SessionGrantService grantService,
             UserManager<ApplicationUser> userManager)
         {
@@ -27,24 +28,21 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
             _userManager = userManager;
         }
 
+        [BindProperty] public SessionInitForm Form { get; set; }
+
         public IActionResult OnGet()
         {
             return Page();
         }
 
-        [BindProperty] public SessionInitForm Form { get; set; }
-
         public async Task<IActionResult> OnPostAsync()
         {
-            if (!ModelState.IsValid)
-            {
-                return Page();
-            }
+            if (!ModelState.IsValid) return Page();
 
             var currentUser = await _userManager.GetUserAsync(User);
 
             var sessionId = Guid.NewGuid();
-            var entry = await _context.RtcSessions.AddAsync(new RtcSession()
+            var entry = await _context.RtcSessions.AddAsync(new RtcSession
             {
                 CreationTime = DateTime.Now,
                 Creator = currentUser,

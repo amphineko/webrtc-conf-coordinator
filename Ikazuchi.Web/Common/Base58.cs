@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 
@@ -10,7 +9,7 @@ namespace Ikazuchi.Web.Common
     {
         private const string Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
 
-        private static IReadOnlyDictionary<char, byte> _dictionary;
+        private static readonly IReadOnlyDictionary<char, byte> _dictionary;
 
         static Base58Encoding()
         {

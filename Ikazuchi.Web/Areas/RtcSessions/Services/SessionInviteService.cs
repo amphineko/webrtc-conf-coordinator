@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
@@ -16,9 +15,8 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Services
     [Component(ServiceLifetime.Scoped)]
     public class SessionInviteService
     {
-        private readonly ApplicationDbContext _context;
-
         private static readonly RNGCryptoServiceProvider Random = new RNGCryptoServiceProvider();
+        private readonly ApplicationDbContext _context;
 
         public SessionInviteService(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
@@ -53,10 +51,13 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Services
             return inviteId;
         }
 
-        public Task<RtcSessionInvite> GetActiveAsync(Guid sessionId, Guid userId) => (
-                from invite in _context.RtcSessionInvites
-                where invite.Creator.Id == userId && invite.Disabled == false && invite.Session.Id == sessionId
-                select invite)
-            .FirstOrDefaultAsync();
+        public Task<RtcSessionInvite> GetActiveAsync(Guid sessionId, Guid userId)
+        {
+            return (
+                    from invite in _context.RtcSessionInvites
+                    where invite.Creator.Id == userId && invite.Disabled == false && invite.Session.Id == sessionId
+                    select invite)
+                .FirstOrDefaultAsync();
+        }
     }
 }

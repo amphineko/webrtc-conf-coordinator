@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Users;
-using Ikazuchi.Web.Areas.RtcSessions.Models;
 using Ikazuchi.Web.Areas.RtcSessions.Services;
-using Ikazuchi.Web.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -18,9 +15,9 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Controllers
     [Authorize]
     public class InviteController : Controller
     {
-        private readonly SessionInviteService _inviteService;
-        private readonly SessionGrantService _grantService;
         private readonly ApplicationDbContext _context;
+        private readonly SessionGrantService _grantService;
+        private readonly SessionInviteService _inviteService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public uint MaxInviteExpires = 72 * 60;

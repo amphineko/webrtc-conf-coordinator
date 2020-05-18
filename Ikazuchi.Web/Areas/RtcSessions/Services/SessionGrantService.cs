@@ -28,7 +28,7 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Services
             if (await Exists(session.Id, user.Id)) // TODO: should be restricted by database
                 return;
 
-            await _context.RtcSessionGrants.AddAsync(new RtcSessionGrant()
+            await _context.RtcSessionGrants.AddAsync(new RtcSessionGrant
             {
                 CreationTime = DateTime.Now,
                 Session = session,
@@ -47,13 +47,15 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Services
             await Create(session, user);
         }
 
-        public async Task<bool> Exists(Guid sessionId, Guid userId) =>
-            await (
-                from grant in _context.RtcSessionGrants
-                where
-                    grant.Session.Id == sessionId &&
-                    grant.User.Id == userId
-                select grant
-            ).CountAsync() > 0;
+        public async Task<bool> Exists(Guid sessionId, Guid userId)
+        {
+            return await (
+                       from grant in _context.RtcSessionGrants
+                       where
+                           grant.Session.Id == sessionId &&
+                           grant.User.Id == userId
+                       select grant
+                   ).CountAsync() > 0;
+        }
     }
 }

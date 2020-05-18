@@ -1,10 +1,9 @@
 import React, { useRef, useEffect } from 'react'
-import { Row } from 'react-bootstrap'
 
 export interface StreamDescription {
-    id: string
-    screenName: string
-    stream: MediaStream
+    id: string;
+    screenName: string;
+    stream?: MediaStream;
 }
 
 function Player(props: { description: StreamDescription }) {
@@ -14,8 +13,9 @@ function Player(props: { description: StreamDescription }) {
 
     useEffect(() => {
         if (video.current) {
+            if (stream) video.current.srcObject = stream
+
             video.current.autoplay = true
-            video.current.srcObject = stream
             video.current.onload = () => {
                 if (video.current && video.current.readyState) {
                     video.current.play()
@@ -34,10 +34,11 @@ function Player(props: { description: StreamDescription }) {
     )
 }
 
-export function PlayerTable(props: { peers: StreamDescription[] }) {
-    const players = props.peers.map((description) => (
-        <Player description={description} key={description.id} />
-    ))
+export function PlayerTable(props: { peers: { [id: string]: StreamDescription } }) {
+    const { peers } = props
+    const players = Object.values(peers)
+        .filter(peer => peer.stream)
+        .map(peer => <Player description={peer} key={peer.id} />)
 
     return (
         <div className="player-grid row align-items-center">

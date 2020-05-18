@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Rtc;
 using Ikazuchi.Data.Models.Users;
 using Ikazuchi.Web.Areas.RtcSessions.Models;
@@ -12,11 +13,11 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class EditModel : PageModel
     {
-        private readonly Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public EditModel(Data.ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public EditModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;
@@ -41,7 +42,7 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
             if (Session.Creator != await _userManager.GetUserAsync(User))
                 return Unauthorized();
 
-            Form = new SessionEditForm()
+            Form = new SessionEditForm
             {
                 Description = Session.Description,
                 Id = Session.Id,

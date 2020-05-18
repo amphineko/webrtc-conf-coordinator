@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Ikazuchi.Data.Models.Users
+﻿namespace Ikazuchi.Data.Models.Users
 {
     public static class ApplicationUserExtensions
     {
@@ -10,8 +6,7 @@ namespace Ikazuchi.Data.Models.Users
         {
             if (user.ScreenName == null || user.ScreenName.Trim().Equals(""))
                 return loggedIn ? user.Email : "No name";
-            else
-                return user.ScreenName;
+            return user.ScreenName;
         }
     }
 }

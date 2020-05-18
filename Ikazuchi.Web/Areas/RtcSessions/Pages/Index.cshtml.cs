@@ -10,6 +10,10 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class IndexModel : IndexModelBase
     {
+        public IndexModel(ApplicationDbContext context) : base(context)
+        {
+        }
+
         public async Task OnGetAsync(int? pageIndex)
         {
             var query = Context.RtcSessions
@@ -28,10 +32,6 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
             PageIndex = Math.Clamp(1, pageIndex ?? 1, PageCount);
 
             Sessions = await query.Skip((PageIndex - 1) * PageSize).Take(PageSize).ToListAsync();
-        }
-
-        public IndexModel(ApplicationDbContext context) : base(context)
-        {
         }
     }
 }

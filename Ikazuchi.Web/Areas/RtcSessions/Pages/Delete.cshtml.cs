@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Rtc;
 using Ikazuchi.Data.Models.Users;
 using Microsoft.AspNetCore.Identity;
@@ -11,10 +12,10 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class DeleteModel : PageModel
     {
-        private readonly Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public DeleteModel(Data.ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public DeleteModel(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

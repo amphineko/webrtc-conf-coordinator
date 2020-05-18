@@ -9,6 +9,10 @@ namespace Ikazuchi.Data.Models.Rtc
 {
     public class RtcSession
     {
+        public byte[] Passphrase;
+
+        public byte[] PassphraseSalt;
+
         [Display(Name = "Created at")]
         [Required]
         public DateTime CreationTime { get; set; }
@@ -20,14 +24,10 @@ namespace Ikazuchi.Data.Models.Rtc
         /// </summary>
         [Required]
         public string Description { get; set; }
-        
+
         [Required] public bool Deleted { get; set; } = false;
 
         [Key] public Guid Id { get; set; }
-
-        public byte[] Passphrase;
-
-        public byte[] PassphraseSalt;
 
         [Required] public bool Public { get; set; }
 

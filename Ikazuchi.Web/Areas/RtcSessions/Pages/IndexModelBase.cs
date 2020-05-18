@@ -7,20 +7,20 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class IndexModelBase : PageModel
     {
-        public IndexModelBase(ApplicationDbContext context)
-        {
-            Context = context;
-        }
-
         public const int PageSize = 10;
-
-        protected ApplicationDbContext Context { get; }
 
         public int PageCount;
 
         public int PageIndex;
 
         public int SessionCount;
+
+        public IndexModelBase(ApplicationDbContext context)
+        {
+            Context = context;
+        }
+
+        protected ApplicationDbContext Context { get; }
 
         public IList<RtcSession> Sessions { get; set; }
     }

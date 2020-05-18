@@ -17,6 +17,12 @@ namespace Ikazuchi.Data
         {
         }
 
+        public DbSet<RtcSession> RtcSessions { get; set; }
+
+        public DbSet<RtcSessionGrant> RtcSessionGrants { get; set; }
+
+        public DbSet<RtcSessionInvite> RtcSessionInvites { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             // inherits from identity
@@ -25,11 +31,5 @@ namespace Ikazuchi.Data
             // apply configurations from current assembly
             builder.ApplyConfigurationsFromAssembly(GetType().Assembly);
         }
-
-        public DbSet<RtcSession> RtcSessions { get; set; }
-
-        public DbSet<RtcSessionGrant> RtcSessionGrants { get; set; }
-
-        public DbSet<RtcSessionInvite> RtcSessionInvites { get; set; }
     }
 }

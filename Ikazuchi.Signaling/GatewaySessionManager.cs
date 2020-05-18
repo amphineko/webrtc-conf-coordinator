@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
 using Ikazuchi.Abstractions;
 using Ikazuchi.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Ikazuchi.Signaling
@@ -16,12 +11,12 @@ namespace Ikazuchi.Signaling
     {
         private readonly ApplicationDbContext _context;
 
-        public IDictionary<Guid, WeakReference<GatewaySession>> Sessions { get; set; }
-
         public GatewaySessionManager()
         {
             Sessions = new Dictionary<Guid, WeakReference<GatewaySession>>();
         }
+
+        public IDictionary<Guid, WeakReference<GatewaySession>> Sessions { get; set; }
 
         public GatewaySession GetSession(Guid sessionId)
         {

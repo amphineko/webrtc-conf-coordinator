@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using IdentityServer4.Models;
 using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -16,12 +15,22 @@ namespace Ikazuchi.Signaling
     [Authorize]
     public class GatewayController : Hub<IGatewayClient>, IGatewayServer
     {
-        private readonly GatewaySessionManager _sessions;
         private readonly ApplicationDbContext _context;
+        private readonly GatewaySessionManager _sessions;
 
         private readonly UserManager<ApplicationUser> _userManager;
 
         private GatewaySession _session;
+
+        public GatewayController(
+            GatewaySessionManager sessions,
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager)
+        {
+            _sessions = sessions;
+            _context = context;
+            _userManager = userManager;
+        }
 
         public GatewaySession Session
         {
@@ -38,51 +47,31 @@ namespace Ikazuchi.Signaling
             }
         }
 
-        private void SetSession(GatewaySession session, Guid id)
-        {
-            _session = session;
-            Context.Items["SessionId"] = id;
-        }
-
-        public GatewayController(
-            GatewaySessionManager sessions,
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
-        {
-            _sessions = sessions;
-            _context = context;
-            _userManager = userManager;
-        }
-
         public async Task LeaveCurrentSession()
         {
-            if (!await EnsureConnectionSingleton()) return;
+            var user = await _userManager.GetUserAsync(Context.User);
 
-            if (Session == null)
-                throw new InvalidOperationException("Connection hasn't joined any session");
+            (Session ?? throw new InvalidOperationException("Connection hasn't joined any session"))
+                .Join(user.Id, Context.ConnectionId, false);
 
-            var userId = await GetUserIdAsync();
-            Session.Connections.Remove(userId);
-            await Task
-                .WhenAll(Session.Connections.Values
-                    .Select(connectionId => Clients.Client(connectionId).OnParticipantLeave(userId)));
+            await Task.WhenAll(Session.Connections.Values.Select(
+                connectionId => Clients.Client(connectionId).OnParticipantLeave(user.Id)
+            ));
 
             SetSession(null, Guid.Empty);
         }
 
-        private async Task<Guid> GetUserIdAsync()
+        public async Task<SessionParticipantDescription> GetParticipant(Guid userId)
         {
-            return (await _userManager.GetUserAsync(Context.User)).Id;
+            return new SessionParticipantDescription
+            {
+                ScreenName = (await _userManager.GetUserAsync(Context.User)).ScreenName
+            };
         }
 
         public async Task JoinSession(Guid sessionId)
         {
-            // connection authorization
             var user = await _userManager.GetUserAsync(Context.User);
-            if (user == null)
-                throw new InvalidOperationException("Connection is not authorized");
-
-            if (!await EnsureConnectionSingleton()) return;
 
             // session authorization
             var grant = await (
@@ -94,22 +83,21 @@ namespace Ikazuchi.Signaling
                 throw new InvalidOperationException("User is not authorized to join the session");
 
             SetSession(_sessions.GetSession(grant.Session.Id), grant.Session.Id);
-            Session.Connections[user.Id] = Context.ConnectionId;
+            Session.Join(user.Id, Context.ConnectionId, true);
 
-            var info = new SessionParticipantDescription()
-            {
-                ScreenName = (await _userManager.GetUserAsync(Context.User)).ScreenName
-            };
             await Task.WhenAll(Session.Connections.Select(pair =>
                 pair.Key == user.Id
                     ? Task.CompletedTask
-                    : Clients.Client(pair.Value).OnParticipantJoin(user.Id, info)
+                    : Clients.Client(pair.Value).OnParticipantJoin(user.Id)
             ));
         }
 
         public async Task SendIceCandidate(Guid destination, string payload)
         {
-            if (!await EnsureConnectionSingleton()) return;
+            var user = await _userManager.GetUserAsync(Context.User);
+
+            (Session ?? throw new InvalidOperationException("Connection hasn't joined any session"))
+                .Join(user.Id, Context.ConnectionId, false);
 
             if (!Session.Connections.TryGetValue(destination, out var connectionId))
                 throw new KeyNotFoundException("User not connected");
@@ -117,76 +105,58 @@ namespace Ikazuchi.Signaling
             await Clients.Client(connectionId).OnParticipantIceCandidate(await GetUserIdAsync(), payload);
         }
 
-        public async Task SendRtcAnswer(Guid destination, string payload)
+        public async Task SendSessionDescription(Guid destination, string payload)
         {
-            if (!await EnsureConnectionSingleton()) return;
+            var user = await _userManager.GetUserAsync(Context.User);
+
+            (Session ?? throw new InvalidOperationException("Connection hasn't joined any session"))
+                .Join(user.Id, Context.ConnectionId, false);
 
             if (!Session.Connections.TryGetValue(destination, out var connectionId))
                 throw new KeyNotFoundException("User not connected");
 
-            await Clients.Client(connectionId).OnParticipantRtcAnswer(await GetUserIdAsync(), payload);
+            await Clients.Client(connectionId).OnParticipantSessionDescription(await GetUserIdAsync(), payload);
         }
 
-        public async Task SendRtcOffer(Guid destination, string payload)
+        private void SetSession(GatewaySession session, Guid id)
         {
-            if (!await EnsureConnectionSingleton()) return;
+            _session = session;
+            Context.Items["SessionId"] = id;
+        }
 
-            if (!Session.Connections.TryGetValue(destination, out var connectionId))
-                throw new KeyNotFoundException("User not connected");
-
-            await Clients.Client(connectionId).OnParticipantRtcOffer(await GetUserIdAsync(), payload,
-                new SessionParticipantDescription()
-                {
-                    ScreenName = (await _userManager.GetUserAsync(Context.User)).ScreenName
-                });
+        private async Task<Guid> GetUserIdAsync()
+        {
+            return (await _userManager.GetUserAsync(Context.User)).Id;
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
-            var userId = await GetUserIdAsync();
-
-            if (Session != null &&
-                Session.Connections.TryGetValue(userId, out var connectionId) &&
-                connectionId == Context.ConnectionId)
-                Session?.Connections.Remove(userId);
-
             await base.OnDisconnectedAsync(exception);
-        }
-
-        private async Task<bool> EnsureConnectionSingleton()
-        {
-            if (Session == null || Session.Connections[await GetUserIdAsync()] == Context.ConnectionId)
-                return true;
-
-            Context.Abort();
-            return false;
         }
     }
 
     public interface IGatewayServer
     {
-        Task LeaveCurrentSession();
+        Task<SessionParticipantDescription> GetParticipant(Guid userId);
 
         Task JoinSession(Guid sessionId);
 
+        Task LeaveCurrentSession();
+
         Task SendIceCandidate(Guid destination, string payload);
 
-        Task SendRtcAnswer(Guid destination, string payload);
-
-        Task SendRtcOffer(Guid destination, string payload);
+        Task SendSessionDescription(Guid destination, string payload);
     }
 
     public interface IGatewayClient
     {
         Task OnParticipantLeave(Guid id);
 
-        Task OnParticipantJoin(Guid id, SessionParticipantDescription description);
+        Task OnParticipantJoin(Guid id);
 
         Task OnParticipantIceCandidate(Guid origin, string payload);
 
-        Task OnParticipantRtcAnswer(Guid origin, string sdpAnswer);
-
-        Task OnParticipantRtcOffer(Guid origin, string sdpOffer, SessionParticipantDescription description);
+        Task OnParticipantSessionDescription(Guid origin, string payload);
     }
 
     public class SessionParticipantDescription

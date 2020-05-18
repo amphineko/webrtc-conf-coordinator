@@ -7,8 +7,6 @@ using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Rtc;
 using Ikazuchi.Data.Models.Users;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace Ikazuchi.Web.Areas.RtcSessions.Pages

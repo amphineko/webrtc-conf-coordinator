@@ -6,8 +6,8 @@ import { getLogger } from '../common/log'
 import { SignalingChannel } from './client'
 
 export interface MediaTracks {
-    audio?: MediaStreamTrack
-    video?: MediaStreamTrack
+    audio?: MediaStreamTrack;
+    video?: MediaStreamTrack;
 }
 
 export type RtcPeerState = 'new' | 'connecting' | 'ready' | 'disconnected'
@@ -16,46 +16,37 @@ export class RtcPeer {
     // this peer uses Perfect Negotiation logic
     // https://w3c.github.io/webrtc-pc/#perfect-negotiation-example
 
-    public onconnectionstatechanged: (state: RTCPeerConnectionState, id?: string) => void = () => { }
+    onconnectionstatechanged: (state: RTCPeerConnectionState, id?: string) => void = () => { }
 
-    public onclose: () => void = () => { }
+    onclose: () => void = () => { };
 
-    public ontrack: () => void = () => { }
+    ontrack: () => void = () => { };
 
-    public readonly remoteTracks: MediaStreamTrack[] = []
+    state: RtcPeerState = 'new';
 
-    public state: RtcPeerState = 'new'
+    readonly remoteTracks: MediaStreamTrack[] = [];
 
-    private readonly logger: Logger = getLogger('RtcPeer')
+    private readonly logger: Logger = getLogger('RtcPeer');
 
-    private readonly pc: RTCPeerConnection
+    private readonly pc: RTCPeerConnection;
 
-    private readonly polite: boolean
+    private readonly polite: boolean;
 
-    private readonly remoteId: string
+    private readonly remoteId: string;
 
-    private readonly signaling: SignalingChannel
+    private readonly signaling: SignalingChannel;
 
-    private tracks: MediaTracks
+    private tracks: MediaTracks;
 
-    private makingOffer = false
+    private makingOffer = false;
 
-    private ignoreOffer = false
+    private ignoreOffer = false;
 
-    private async sendDescription(description: RTCSessionDescription) {
-        await this.signaling.sendLocalDescription(this.remoteId, JSON.stringify(description))
-        this.logger.debug(`${this.remoteId} session description sent, type=${description.type}`)
-    }
-
-    private getOfferOptions(): RTCOfferOptions {
-        return {
-            iceRestart: true,
-            offerToReceiveAudio: this.tracks.audio && true,
-            offerToReceiveVideo: this.tracks.video && true
-        }
-    }
-
-    public constructor(remoteId: string, tracks: MediaTracks, iceServers: RTCIceServer[], passive: boolean, signaling: SignalingChannel) {
+    public constructor(remoteId: string,
+        tracks: MediaTracks,
+        iceServers: RTCIceServer[],
+        passive: boolean,
+        signaling: SignalingChannel) {
         this.signaling = signaling
         this.polite = passive
         this.remoteId = remoteId
@@ -110,12 +101,12 @@ export class RtcPeer {
             this.logger.info(`${remoteId} connection state → ${pc.connectionState}`)
         }
 
-        pc.oniceconnectionstatechange = () => this.logger.debug(`${remoteId} ICE connection state → ${pc.iceConnectionState}`)
-        pc.onicegatheringstatechange = () => this.logger.debug(`${remoteId} ICE gathering state → ${pc.iceConnectionState}`)
-        pc.onsignalingstatechange = () => this.logger.debug(`${remoteId} signaling state → ${pc.iceConnectionState}`)
+        pc.oniceconnectionstatechange = () => { this.logger.debug(`${remoteId} ICE connection state → ${pc.iceConnectionState}`); this.updateState() }
+        pc.onicegatheringstatechange = () => { this.logger.debug(`${remoteId} ICE gathering state → ${pc.iceConnectionState}`); this.updateState() }
+        pc.onsignalingstatechange = () => { this.logger.debug(`${remoteId} signaling state → ${pc.iceConnectionState}`); this.updateState() }
     }
 
-    public async acceptIceCandidate(payload: string) {
+    async acceptIceCandidate(payload: string) {
         const candidate = JSON.parse(payload) as RTCIceCandidate
         this.logger.debug(`${this.remoteId} remote ICE candidate`)
         try {
@@ -125,10 +116,11 @@ export class RtcPeer {
         }
     }
 
-    public async acceptRemoteDescription(payload: string) {
+    async acceptRemoteDescription(payload: string) {
         const description = JSON.parse(payload) as RTCSessionDescription
         try {
-            const offerCollision = description.type === 'offer' && (this.makingOffer || this.pc.signalingState !== 'stable')
+            const offerCollision = description.type === 'offer' &&
+                (this.makingOffer || this.pc.signalingState !== 'stable')
             this.ignoreOffer = !this.polite && offerCollision
             if (this.ignoreOffer) return
 
@@ -153,12 +145,12 @@ export class RtcPeer {
         }
     }
 
-    public close() {
+    close() {
         this.remoteTracks.forEach((track) => track.stop())
         this.pc.close()
     }
 
-    public setTracks(tracks: MediaTracks) {
+    setTracks(tracks: MediaTracks) {
         this.pc.getSenders().forEach((sender) => {
             this.logger.debug(`${this.remoteId} local removed ${sender.track?.kind} track ${sender.track?.label}`)
             this.pc.removeTrack(sender)
@@ -171,8 +163,21 @@ export class RtcPeer {
 
         if (tracks.video) {
             this.pc.addTrack(tracks.video)
-            this.logger.debug(`${this.remoteId} local added ${tracks.video.kind} track ${tracks.video.label}`)
+            this.logger.debug(`${this.remoteId} local added ${tracks.video.kind} track ${tracks.video.label} `)
         }
+    }
+
+    private getOfferOptions(): RTCOfferOptions {
+        return {
+            iceRestart: true,
+            offerToReceiveAudio: this.tracks.audio && true,
+            offerToReceiveVideo: this.tracks.video && true
+        }
+    }
+
+    private async sendDescription(description: RTCSessionDescription) {
+        await this.signaling.sendLocalDescription(this.remoteId, JSON.stringify(description))
+        this.logger.debug(`${this.remoteId} session description sent, type = ${description.type} `)
     }
 
     private updateState() {
@@ -181,6 +186,14 @@ export class RtcPeer {
         this.pc.signalingState === 'stable' && (this.state = 'ready')
         this.pc.connectionState === 'connected' && (this.state = 'ready');
 
-        (this.pc.connectionState === 'disconnected' || this.pc.connectionState === 'failed') && (this.state = 'disconnected')
+        (this.pc.connectionState === 'disconnected' || this.pc.connectionState === 'failed') &&
+            (this.state = 'disconnected')
+
+        setImmediate(() => this.onconnectionstatechanged(this.pc.connectionState, this.remoteId))
     }
 }
+
+(() => {
+    const logger = getLogger('RtcPeerCommon')
+    logger.debug(`Running on ${adapter.browserDetails.browser} ${adapter.browserDetails.version} (unifiedPlan = ${adapter.browserDetails.supportsUnifiedPlan})`)
+})()

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Ikazuchi.Data;
 using Ikazuchi.Data.Models.Rtc;
 using Ikazuchi.Data.Models.Users;
 using Ikazuchi.Web.Areas.RtcSessions.Services;
@@ -14,13 +15,13 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 {
     public class DetailsModel : PageModel
     {
-        private readonly Data.ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         private readonly SessionInviteService _inviteService;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public DetailsModel(
-            Data.ApplicationDbContext context,
+            ApplicationDbContext context,
             SessionInviteService inviteService,
             UserManager<ApplicationUser> userManager)
         {
@@ -39,19 +40,13 @@ namespace Ikazuchi.Web.Areas.RtcSessions.Pages
 
         public async Task<IActionResult> OnGetAsync(Guid? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             Session = await _context.RtcSessions
                 .Include(session => session.Creator)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (Session == null)
-            {
-                return NotFound();
-            }
+            if (Session == null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
 
