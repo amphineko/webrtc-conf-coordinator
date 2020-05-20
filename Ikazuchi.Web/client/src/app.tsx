@@ -5,6 +5,7 @@ import { MemberList, MemberDescriptor } from './member_list'
 import { GatewayClient, GatewayState, UserInfo } from './gateway/client'
 import { getLogger } from './common/log'
 import { StreamDescription, PlayerTable } from './players'
+import { SessionUserOptions } from './storage'
 
 import './app.scss'
 
@@ -12,8 +13,14 @@ export interface AppConfig {
     gatewayPath: string
 }
 
-export function AppMain(props: { config: AppConfig, sessionId: string, iceServers: RTCIceServer[] }) {
-    const { config: appConfig, sessionId } = props
+export function AppMain(props: {
+    config: AppConfig,
+    iceServers: RTCIceServer[]
+    sessionId: string,
+    userOptions: SessionUserOptions,
+    updateUserOptions: (options: SessionUserOptions) => void
+}) {
+    const { config: appConfig, sessionId, userOptions } = props
     const { gatewayPath: gatewayUrl } = appConfig
 
     const logger = getLogger('AppMain')

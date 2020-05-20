@@ -6,6 +6,7 @@ import 'react-bootstrap/dist/react-bootstrap'
 
 import { AppMain } from './app'
 import { setDebug } from './common/log'
+import { getSessionOptions, setSessionOptions } from './storage'
 
 setDebug('?')
 
@@ -39,7 +40,13 @@ const iceServers = [
 
 ReactDOM.render(
     <React.StrictMode>
-        <AppMain config={config} sessionId={sessionId} iceServers={iceServers} />
+        <AppMain
+            config={config}
+            iceServers={iceServers}
+            sessionId={sessionId}
+            userOptions={getSessionOptions(sessionId)}
+            updateUserOptions={(options) => setSessionOptions(sessionId, options)}
+        />
     </React.StrictMode>,
     document.getElementById('root')
 )
