@@ -37,9 +37,9 @@ export class GatewayClient implements SignalingChannel {
 
     private tracks: MediaTracks;
 
-    public constructor(url: string, tracks: MediaTracks, iceServers: RTCIceServer[]) {
+    public constructor(url: string, iceServers: RTCIceServer[]) {
         this.iceServers = iceServers
-        this.tracks = tracks
+        this.tracks = { audio: undefined, video: undefined }
 
         this.peers = new Map()
 
