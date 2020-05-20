@@ -27,5 +27,5 @@ export function getSessionOptions(id: string): SessionUserOptions {
 
 export function setSessionOptions(id: string, options: SessionUserOptions) {
     const save = Object.assign({}, defaultOptions, options)
-    window.localStorage.setItem(`session-options-${id}`, JSON.stringify(options))
+    window.localStorage.setItem(`session-options-${id}`, JSON.stringify(save))
 }
