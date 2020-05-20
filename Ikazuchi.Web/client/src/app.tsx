@@ -30,8 +30,6 @@ export function AppMain(props: { config: AppConfig, sessionId: string, iceServer
 
     const [peerInfos, setPeerInfos] = useState<{ [key: string]: UserInfo }>({})
 
-    console.log(remoteStreams)
-
     async function initializeUserMedia() {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         setLocalStream(stream)
