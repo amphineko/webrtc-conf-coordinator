@@ -8,8 +8,8 @@ export interface SessionUserOptions {
 }
 
 const defaultOptions: SessionUserOptions = {
-    localAudio: false,
-    localVideo: false
+    localAudio: true,
+    localVideo: true
 }
 
 export function getSessionOptions(id: string): SessionUserOptions {
