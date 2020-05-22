@@ -1,9 +1,10 @@
 import React, { useRef, useEffect } from 'react'
+import { UserInfo } from './gateway/client'
 
-export interface StreamDescription {
-    id: string;
-    screenName: string;
-    stream?: MediaStream;
+interface StreamDescription {
+    id: string,
+    screenName: string,
+    stream: MediaStream
 }
 
 function Player(props: { description: StreamDescription }) {
@@ -34,11 +35,20 @@ function Player(props: { description: StreamDescription }) {
     )
 }
 
-export function PlayerTable(props: { peers: { [id: string]: StreamDescription } }) {
-    const { peers } = props
-    const players = Object.values(peers)
-        .filter(peer => peer.stream)
-        .map(peer => <Player description={peer} key={peer.id} />)
+export function PlayerTable(props: {
+    peerInfos: Record<string, UserInfo>,
+    streams: Record<string, MediaStream | undefined>
+}) {
+    const { peerInfos, streams } = props
+    const players = Object.keys(streams)
+        .map(id => {
+            const stream = streams[id]
+            if (stream === undefined) return
+
+            const screenName = id in peerInfos ? peerInfos[id].screenName : 'loading'
+            return <Player description={{ id, screenName, stream }} key={id} />
+        })
+        .filter(player => player)
 
     return (
         <div className="player-grid row align-items-center">

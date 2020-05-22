@@ -19,7 +19,7 @@ export interface SignalingChannel {
 export class GatewayClient implements SignalingChannel {
     onpeerchanged: () => void = () => { };
 
-    onpeerstatechanged: () => void = () => { };
+    onpeerstatechanged: (id: string) => void = () => { };
 
     onpeertrack: (remoteId: string) => void = () => { };
 
@@ -173,7 +173,7 @@ export class GatewayClient implements SignalingChannel {
             if (stalled === peer) this.peers.delete(id)
         }
 
-        peer.onconnectionstatechanged = (state, id) => this.onpeerstatechanged()
+        peer.onconnectionstatechanged = () => this.onpeerstatechanged(id)
 
         peer.setTracks(this.tracks)
 

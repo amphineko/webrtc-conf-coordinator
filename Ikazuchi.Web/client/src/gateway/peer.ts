@@ -10,13 +10,13 @@ export interface MediaTracks {
     video?: MediaStreamTrack;
 }
 
-export type RtcPeerState = 'new' | 'connecting' | 'ready' | 'disconnected'
+export type RtcPeerState = 'new' | 'connecting' | 'ice-connecting' | 'ready' | 'disconnected'
 
 export class RtcPeer {
     // this peer uses Perfect Negotiation logic
     // https://w3c.github.io/webrtc-pc/#perfect-negotiation-example
 
-    onconnectionstatechanged: (state: RTCPeerConnectionState, id?: string) => void = () => { }
+    onconnectionstatechanged: () => void = () => { }
 
     onclose: () => void = () => { };
 
@@ -24,7 +24,7 @@ export class RtcPeer {
 
     state: RtcPeerState = 'new';
 
-    readonly remoteTracks: MediaStreamTrack[] = [];
+    readonly remoteTracks: Set<MediaStreamTrack> = new Set();
 
     private readonly logger: Logger = getLogger('RtcPeer');
 
@@ -66,7 +66,9 @@ export class RtcPeer {
         // listen attached tracks
 
         pc.ontrack = ({ track }) => {
-            this.remoteTracks.push(track)
+            track.addEventListener('mute', () => track.stop())
+            track.addEventListener('ended', () => this.remoteTracks.delete(track))
+            this.remoteTracks.add(track)
             this.logger.debug(`${remoteId} remote attached ${track.kind} track ${track.id}`)
             this.ontrack()
         }
@@ -99,6 +101,7 @@ export class RtcPeer {
         pc.onconnectionstatechange = () => {
             if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') this.onclose()
             this.logger.info(`${remoteId} connection state → ${pc.connectionState}`)
+            this.updateState()
         }
 
         pc.oniceconnectionstatechange = () => { this.logger.debug(`${remoteId} ICE connection state → ${pc.iceConnectionState}`); this.updateState() }
@@ -146,6 +149,7 @@ export class RtcPeer {
     }
 
     close() {
+        this.logger.info(`${this.remoteId} closing connection`)
         this.remoteTracks.forEach((track) => track.stop())
         this.pc.close()
     }
@@ -183,13 +187,14 @@ export class RtcPeer {
     private updateState() {
         this.state = 'connecting'
 
-        this.pc.signalingState === 'stable' && (this.state = 'ready')
+        this.pc.iceGatheringState === 'gathering' && (this.state = 'ice-connecting');
+        (this.pc.iceConnectionState in ['checking', 'completed']) && (this.state = 'ice-connecting')
         this.pc.connectionState === 'connected' && (this.state = 'ready');
 
         (this.pc.connectionState === 'disconnected' || this.pc.connectionState === 'failed') &&
             (this.state = 'disconnected')
 
-        setImmediate(() => this.onconnectionstatechanged(this.pc.connectionState, this.remoteId))
+        setImmediate(() => this.onconnectionstatechanged())
     }
 }
 
